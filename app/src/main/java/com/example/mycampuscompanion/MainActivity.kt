@@ -23,6 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext // Pour récupérer le Context
 import com.example.mycampuscompanion.ui.theme.MyCampusCompanionTheme
 
 class MainActivity : ComponentActivity() {
@@ -62,6 +65,9 @@ fun AnnuaireScreen(contacts: List<Contact>, modifier: Modifier = Modifier) {
 
 @Composable
 fun ContactCard(contact: Contact) {
+
+    // 1. On récupère le contexte actuel
+    val context = LocalContext.current
     // Row est le conteneur principal pour aligner les éléments horizontalement
     Row(
         modifier = Modifier
@@ -85,8 +91,11 @@ fun ContactCard(contact: Contact) {
 
         // Bouton d'icône pour l'appel
         IconButton(onClick = {
-            // TODO: Mettre ici le code pour appeler
-            println("DEBUG: Appel de ${contact.prenom}")
+            // 2. Créer l'intention de COMPOSER un numéro (ACTION_DIAL)
+            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${contact.numeroDeTelephone}"))
+            // 3. Lancer l'activité correspondante
+            context.startActivity(intent)
+//            println("DEBUG: Appel de ${contact.prenom}")
         }) {
             Icon(
                 imageVector = Icons.Default.Call, // L'icône du téléphone
@@ -96,8 +105,12 @@ fun ContactCard(contact: Contact) {
 
         // Bouton d'icône pour le SMS
         IconButton(onClick = {
-            // TODO: Mettre ici le code pour envoyer un SMS
-            println("DEBUG: SMS à ${contact.prenom}")
+            // 2. Créer l'intention d'ENVOYER un message (ACTION_SENDTO)
+            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:${contact.numeroDeTelephone}"))
+            // On peut même pré-remplir le message !
+//            intent.putExtra("sms_body", "Bonjour ${contact.prenom}, ")
+            // 3. Lancer l'activité
+            context.startActivity(intent)
         }) {
             Icon(
                 imageVector = Icons.Default.Send, // L'icône d'envoi
