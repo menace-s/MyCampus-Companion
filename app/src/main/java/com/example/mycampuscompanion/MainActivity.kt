@@ -4,14 +4,22 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,16 +62,48 @@ fun AnnuaireScreen(contacts: List<Contact>, modifier: Modifier = Modifier) {
 
 @Composable
 fun ContactCard(contact: Contact) {
-    // Pour l'instant, on affiche juste le nom complet et le numéro
-    Column(modifier = Modifier.padding(16.dp)) { // Column permet d'empiler les éléments verticalement
-        Text(
-            text = "${contact.prenom} ${contact.nom}",
-            style = MaterialTheme.typography.titleMedium // On utilise le style du thème !
-        )
-        Text(
-            text = contact.numeroDeTelephone,
-            style = MaterialTheme.typography.bodySmall
-        )
+    // Row est le conteneur principal pour aligner les éléments horizontalement
+    Row(
+        modifier = Modifier
+            .fillMaxWidth() // La rangée prend toute la largeur
+            .padding(vertical = 8.dp, horizontal = 16.dp), // Un peu d'espace
+        verticalAlignment = Alignment.CenterVertically // Centre les éléments verticalement
+    ) {
+        // Column pour le nom et le numéro (prend toute la place restante)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "${contact.prenom} ${contact.nom}",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = contact.numeroDeTelephone,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        // --- C'EST ICI QU'ON AJOUTE L'INTERACTIVITÉ ---
+
+        // Bouton d'icône pour l'appel
+        IconButton(onClick = {
+            // TODO: Mettre ici le code pour appeler
+            println("DEBUG: Appel de ${contact.prenom}")
+        }) {
+            Icon(
+                imageVector = Icons.Default.Call, // L'icône du téléphone
+                contentDescription = "Appeler ${contact.prenom}" // Pour l'accessibilité
+            )
+        }
+
+        // Bouton d'icône pour le SMS
+        IconButton(onClick = {
+            // TODO: Mettre ici le code pour envoyer un SMS
+            println("DEBUG: SMS à ${contact.prenom}")
+        }) {
+            Icon(
+                imageVector = Icons.Default.Send, // L'icône d'envoi
+                contentDescription = "Envoyer un SMS à ${contact.prenom}"
+            )
+        }
     }
 }
 
