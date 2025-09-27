@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
 }
 // Liste de données pour la démo
 val sampleContacts = listOf(
-    Contact(1, "Dupont", "Jean", "01 23 45 67 89", "jean.dupont@campus.com"),
+    Contact(1, "Aganh", "Jean", "05 44 83 35 50", "jean.dupont@campus.com"),
     Contact(2, "Durand", "Marie", "02 34 56 78 90"),
     Contact(3, "Martin", "Pierre", "03 45 67 89 01", "pierre.martin@campus.com"),
     Contact(4, "Bernard", "Alice", "04 56 78 90 12"),
