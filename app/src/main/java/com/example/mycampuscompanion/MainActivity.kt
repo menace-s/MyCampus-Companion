@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext // Pour récupérer le Context
 import com.example.mycampuscompanion.ui.theme.MyCampusCompanionTheme
 
@@ -38,7 +39,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AnnuaireScreen(contacts = sampleContacts)
+                    NewsScreen()
+//                    AnnuaireScreen(contacts = sampleContacts)
                 }
             }
         }
@@ -124,6 +126,7 @@ fun ContactCard(contact: Contact) {
 @Composable
 fun AnnuaireScreenPreview() {
     MyCampusCompanionTheme {
-        AnnuaireScreen(contacts = sampleContacts)
+//        AnnuaireScreen(contacts = sampleContacts)
+        NewsScreen()
     }
 }
