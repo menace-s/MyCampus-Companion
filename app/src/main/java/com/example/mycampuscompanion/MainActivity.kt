@@ -36,6 +36,7 @@ fun MainScreen() {
     val items = listOf(
         Screen.Actualites,
         Screen.Annuaire,
+        Screen.Carte
     )
 
     Scaffold(
@@ -73,7 +74,7 @@ fun MainScreen() {
         NavHost(navController, startDestination = Screen.Actualites.route, Modifier.padding(innerPadding)) {
             composable(Screen.Actualites.route) { NewsScreen() }
             composable(Screen.Annuaire.route) { AnnuaireScreen(contacts = sampleContacts) }
-            // Ajoute ici les autres écrans du projet (Géolocalisation, etc.)
+            composable(Screen.Carte.route) { com.example.mycampuscompanion.ui.features.map.MapScreen() }
         }
     }
 }
