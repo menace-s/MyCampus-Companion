@@ -18,12 +18,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mycampuscompanion.data.model.Post
 
+object NewsViewModelFactory : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(
+        modelClass: Class<T>,
+        extras: CreationExtras // Ce paramètre "extras" est la nouvelle façon de faire
+    ): T {
+        if (modelClass.isAssignableFrom(NewsViewModel::class.java)) {
+            // On récupère l'application via les "extras" de manière sûre
+            val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
+
+            @Suppress("UNCHECKED_CAST")
+            return NewsViewModel(application) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
 @Composable
-fun NewsScreen(newsViewModel: NewsViewModel = viewModel()) {
+fun NewsScreen(newsViewModel: NewsViewModel = viewModel(factory = NewsViewModelFactory)) {
 
     // 1. On observe le "state" du ViewModel.
     // `collectAsStateWithLifecycle` est intelligent : il transforme le StateFlow du ViewModel
