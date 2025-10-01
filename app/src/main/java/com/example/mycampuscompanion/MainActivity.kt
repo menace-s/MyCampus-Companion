@@ -3,10 +3,14 @@ package com.example.mycampuscompanion
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.*
 import com.example.mycampuscompanion.data.model.Contact
 import com.example.mycampuscompanion.ui.features.directory.AnnuaireScreen
 import com.example.mycampuscompanion.ui.features.news.NewsScreen
@@ -17,23 +21,67 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyCampusCompanionTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-//                    NewsScreen()
-                    AnnuaireScreen(contacts = sampleContacts)
-                }
+                MainScreen()
             }
         }
     }
 }
-// Liste de données pour la démo
+
+@Composable
+fun MainScreen() {
+    // 1. Initialiser le contrôleur de navigation
+    val navController = rememberNavController()
+
+    // La liste des écrans pour notre barre de navigation
+    val items = listOf(
+        Screen.Actualites,
+        Screen.Annuaire,
+    )
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+
+                items.forEach { screen ->
+                    NavigationBarItem(
+                        icon = { Icon(screen.icon, contentDescription = null) },
+                        label = { Text(screen.label) },
+                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                        onClick = {
+                            navController.navigate(screen.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                // Avoid multiple copies of the same destination when
+                                // reselecting the same item
+                                launchSingleTop = true
+                                // Restore state when reselecting a previously selected item
+                                restoreState = true
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        // 2. Mettre en place le NavHost qui affichera les écrans
+        NavHost(navController, startDestination = Screen.Actualites.route, Modifier.padding(innerPadding)) {
+            composable(Screen.Actualites.route) { NewsScreen() }
+            composable(Screen.Annuaire.route) { AnnuaireScreen(contacts = sampleContacts) }
+            // Ajoute ici les autres écrans du projet (Géolocalisation, etc.)
+        }
+    }
+}
+
+
+// Liste de données pour la démo (on la laisse ici temporairement)
 val sampleContacts = listOf(
     Contact(1, "Aganh", "Jean", "05 44 83 35 50", "jean.dupont@campus.com"),
     Contact(2, "Durand", "Marie", "02 34 56 78 90"),
     Contact(3, "Martin", "Pierre", "03 45 67 89 01", "pierre.martin@campus.com"),
-    Contact(4, "Bernard", "Alice", "04 56 78 90 12"),
-    Contact(5, "Thomas", "Lucie", "05 67 89 01 23", "lucie.thomas@campus.com")
 )
