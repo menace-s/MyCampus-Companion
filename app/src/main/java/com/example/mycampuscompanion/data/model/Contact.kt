@@ -1,4 +1,4 @@
-package com.example.mycampuscompanion
+package com.example.mycampuscompanion.data.model
 
 data class Contact(
     val id: Int,

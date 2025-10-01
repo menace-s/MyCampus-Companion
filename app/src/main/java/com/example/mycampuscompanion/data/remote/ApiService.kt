@@ -1,22 +1,11 @@
-package com.example.mycampuscompanion
+package com.example.mycampuscompanion.data.remote
 
+import com.example.mycampuscompanion.data.model.Post
 import com.google.gson.annotations.SerializedName
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 
-// --- 1. Le "moule" pour nos données ---
-// Cette data class représente un article ("Post") de notre API.
-// Les noms des variables doivent correspondre aux clés du JSON.
-data class Post(
-    val id: Int,
-    val userId: Int,
-    val title: String,
-    // @SerializedName est utile si le nom dans le JSON est différent
-    // de celui qu'on veut en Kotlin. Ici, "body" est le même.
-    @SerializedName("body")
-    val content: String
-)
 
 
 // --- 2. Le "menu" des actions possibles avec l'API ---

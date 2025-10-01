@@ -1,6 +1,8 @@
-package com.example.mycampuscompanion
+package com.example.mycampuscompanion.ui.features.news
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mycampuscompanion.data.model.Post
+import com.example.mycampuscompanion.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -11,7 +13,8 @@ import kotlinx.coroutines.launch
 // Représente les différents états possibles de notre écran d'actualités
 sealed interface NewsState {
     object Loading : NewsState // L'état de chargement
-    data class Success(val posts: List<Post>) : NewsState // L'état de succès avec la liste des articles
+    data class Success(val posts: List<Post>) :
+        NewsState // L'état de succès avec la liste des articles
     data class Error(val message: String) : NewsState // L'état d'erreur avec un message
 }
 

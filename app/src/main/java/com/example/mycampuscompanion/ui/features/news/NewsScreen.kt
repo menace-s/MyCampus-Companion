@@ -1,4 +1,4 @@
-package com.example.mycampuscompanion
+package com.example.mycampuscompanion.ui.features.news
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,7 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.mycampuscompanion.ui.theme.MyCampusCompanionTheme
+import com.example.mycampuscompanion.data.model.Post
 
 @Composable
 fun NewsScreen(newsViewModel: NewsViewModel = viewModel()) {
