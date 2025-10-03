@@ -36,7 +36,8 @@ fun MainScreen() {
     val items = listOf(
         Screen.Actualites,
         Screen.Annuaire,
-        Screen.Carte
+        Screen.Carte,
+        Screen.Signalement
     )
 
     Scaffold(
@@ -75,6 +76,19 @@ fun MainScreen() {
             composable(Screen.Actualites.route) { NewsScreen() }
             composable(Screen.Annuaire.route) { AnnuaireScreen(contacts = sampleContacts) }
             composable(Screen.Carte.route) { com.example.mycampuscompanion.ui.features.map.MapScreen() }
+            navigation(
+                startDestination = "reporting_list", // L'écran de départ de cette section
+                route = Screen.Signalement.route     // La route principale pour cette section
+            ) {
+                // La "rue" pour l'écran de la liste
+                composable("reporting_list") {
+                    com.example.mycampuscompanion.ui.features.reporting.ReportingListScreen(navController)
+                }
+                // La "rue" pour l'écran du formulaire
+                composable("add_report") {
+                    com.example.mycampuscompanion.ui.features.reporting.AddReportScreen(navController)
+                }
+            }
         }
     }
 }
