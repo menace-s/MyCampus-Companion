@@ -85,6 +85,8 @@ dependencies {
     // Pour charger et afficher les images facilement
     implementation("io.coil-kt:coil-compose:2.6.0")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

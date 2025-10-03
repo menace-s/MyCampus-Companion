@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -15,6 +16,10 @@ import com.example.mycampuscompanion.data.model.Contact
 import com.example.mycampuscompanion.ui.features.directory.AnnuaireScreen
 import com.example.mycampuscompanion.ui.features.news.NewsScreen
 import com.example.mycampuscompanion.ui.theme.MyCampusCompanionTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.navigation
+import com.example.mycampuscompanion.ui.features.reporting.ReportingViewModel
+import com.example.mycampuscompanion.ui.features.reporting.ReportingViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,16 +82,43 @@ fun MainScreen() {
             composable(Screen.Annuaire.route) { AnnuaireScreen(contacts = sampleContacts) }
             composable(Screen.Carte.route) { com.example.mycampuscompanion.ui.features.map.MapScreen() }
             navigation(
-                startDestination = "reporting_list", // L'écran de départ de cette section
-                route = Screen.Signalement.route     // La route principale pour cette section
+                startDestination = "reporting_list",
+                route = Screen.Signalement.route
             ) {
-                // La "rue" pour l'écran de la liste
-                composable("reporting_list") {
-                    com.example.mycampuscompanion.ui.features.reporting.ReportingListScreen(navController)
+                // On ne crée PAS le ViewModel ici.
+
+                composable("reporting_list") { backStackEntry ->
+                    // 1. On trouve le "propriétaire" du ViewModel : le graphe de navigation "Signalement"
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry(Screen.Signalement.route)
+                    }
+                    // 2. On crée le ViewModel en le liant à ce propriétaire parent.
+                    val reportingViewModel: ReportingViewModel = viewModel(
+                        viewModelStoreOwner = parentEntry,
+                        factory = ReportingViewModelFactory
+                    )
+
+                    // 3. On passe ce ViewModel partagé à notre écran.
+                    com.example.mycampuscompanion.ui.features.reporting.ReportingListScreen(
+                        navController = navController,
+                        viewModel = reportingViewModel
+                    )
                 }
-                // La "rue" pour l'écran du formulaire
-                composable("add_report") {
-                    com.example.mycampuscompanion.ui.features.reporting.AddReportScreen(navController)
+
+                composable("add_report") { backStackEntry ->
+                    // On fait EXACTEMENT la même chose pour le deuxième écran
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry(Screen.Signalement.route)
+                    }
+                    val reportingViewModel: ReportingViewModel = viewModel(
+                        viewModelStoreOwner = parentEntry,
+                        factory = ReportingViewModelFactory
+                    )
+
+                    com.example.mycampuscompanion.ui.features.reporting.AddReportScreen(
+                        navController = navController,
+                        reportingViewModel = reportingViewModel
+                    )
                 }
             }
         }
