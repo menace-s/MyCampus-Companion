@@ -1,25 +1,22 @@
-Absolument. C'est une excellente idée de prendre une pause pour documenter le projet. Un bon `README` est essentiel pour que toi (dans le futur) ou ton enseignant puissiez comprendre rapidement la structure et les choix techniques.
-
-Voici une proposition complète pour ton fichier `README.md`. Copie et colle ce texte dans le fichier `README.md` à la racine de ton projet.
 
 -----
 
 # MyCampus Companion 🎓
 
-[cite\_start]`MyCampus Companion` est une application Android native développée dans le cadre du cours de développement mobile du Master 2. [cite: 2, 3] [cite\_start]L'objectif est d'offrir aux étudiants un outil centralisant plusieurs services essentiels liés à la vie sur le campus. [cite: 9]
+`MyCampus Companion` est une application Android native développée dans le cadre du cours de développement mobile du Master 2.  L'objectif est d'offrir aux étudiants un outil centralisant plusieurs services essentiels liés à la vie sur le campus. 
 
 ## ✨ Fonctionnalités
 
 L'application implémente les quatre modules principaux décrits dans le cahier des charges :
 
-* [cite\_start]**📰 Actualités :** Consultation des actualités du campus via une API REST, avec un cache local SQLite pour un accès hors-ligne. [cite: 11, 18, 20]
-* [cite\_start]**📞 Annuaire :** Accès à un répertoire de contacts avec la possibilité de lancer un appel ou d'envoyer un SMS directement depuis l'application. [cite: 12, 24]
-* [cite\_start]**🗺️ Géolocalisation :** Affichage de la position actuelle de l'utilisateur sur une carte, ainsi qu'un point d'intérêt fixe (la bibliothèque de l'ESATIC). [cite: 29, 30]
-* [cite\_start]**📸 Signalement Multimédia :** Permet à un utilisateur de signaler un incident en créant un "ticket" contenant un titre, une description, une photo et les coordonnées GPS du lieu. [cite: 13, 33, 34]
+* **📰 Actualités :** Consultation des actualités du campus via une API REST, avec un cache local SQLite pour un accès hors-ligne. 
+* **📞 Annuaire :** Accès à un répertoire de contacts avec la possibilité de lancer un appel ou d'envoyer un SMS directement depuis l'application. 
+* **🗺️ Géolocalisation :** Affichage de la position actuelle de l'utilisateur sur une carte, ainsi qu'un point d'intérêt fixe (la bibliothèque de l'ESATIC). 
+* **📸 Signalement Multimédia :** Permet à un utilisateur de signaler un incident en créant un "ticket" contenant un titre, une description, une photo et les coordonnées GPS du lieu. 
 
 ## 🏗️ Architecture Technique
 
-[cite\_start]Le projet est construit sur une architecture **MVVM (Model-View-ViewModel)**, comme recommandé par Google et le cahier des charges[cite: 68], afin de garantir une séparation claire des responsabilités, une bonne testabilité et une maintenance facilitée.
+Le projet est construit sur une architecture **MVVM (Model-View-ViewModel)**, comme recommandé par Google et le cahier des charges, afin de garantir une séparation claire des responsabilités, une bonne testabilité et une maintenance facilitée.
 
 Le flux de données suit le schéma suivant :
 
@@ -74,17 +71,15 @@ com.example.mycampuscompanion
 
 ## 🛠️ Technologies et Bibliothèques
 
-* [cite\_start]**Langage :** [Kotlin](https://kotlinlang.org/) (au lieu de Java[cite: 67], un choix motivé par les recommandations actuelles de Google pour le développement Android).
+* **Langage :** [Kotlin](https://kotlinlang.org/) (au lieu de Java, un choix motivé par les recommandations actuelles de Google pour le développement Android).
 * **Interface Utilisateur :** [Jetpack Compose](https://developer.android.com/jetpack/compose) pour une UI déclarative et moderne.
-* [cite\_start]**Architecture :** MVVM (Model-View-ViewModel). [cite: 68]
+* **Architecture :** MVVM (Model-View-ViewModel). 
 * **Asynchronisme :** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) pour gérer les opérations en arrière-plan (réseau, base de données).
-* [cite\_start]**Réseau :** [Retrofit](https://square.github.io/retrofit/) pour les appels à l'API REST [cite: 70] [cite\_start]et [Gson](https://github.com/google/gson) pour la conversion JSON. [cite: 70]
-* [cite\_start]**Base de Données :** [Room](https://developer.android.com/jetpack/androidx/releases/room) pour la persistance des données SQLite. [cite: 69]
+* **Réseau :** [Retrofit](https://square.github.io/retrofit/) pour les appels à l'API REST  et [Gson](https://github.com/google/gson) pour la conversion JSON. 
+* **Base de Données :** [Room](https://developer.android.com/jetpack/androidx/releases/room) pour la persistance des données SQLite. 
 * **Navigation :** [Navigation Compose](https://developer.android.com/jetpack/compose/navigation) pour gérer la navigation entre les écrans.
-* [cite\_start]**Cartographie :** [osmdroid](https://github.com/osmdroid/osmdroid) pour l'affichage des cartes OpenStreetMap (choisi comme équivalent au Google Maps SDK [cite: 31]).
+* **Cartographie :** [osmdroid](https://github.com/osmdroid/osmdroid) pour l'affichage des cartes OpenStreetMap (choisi comme équivalent au Google Maps SDK ).
 * **Chargement d'images :** [Coil](https://coil-kt.github.io/coil/) pour charger et afficher les images de manière asynchrone.
 * **Gestion des permissions et activités :** [Activity Result APIs](https://developer.android.com/training/basics/intents/result).
 
 -----
-
-Prendre le temps de rédiger ce `README` est une excellente chose. Il servira de base parfaite pour ton rapport technique \!
