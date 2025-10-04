@@ -1,33 +1,36 @@
+Absolument \! C'est une excellente habitude de mettre à jour la documentation après un changement d'architecture majeur.
+
+Voici ton fichier `README.md` actualisé pour refléter l'implémentation complète du pattern **Repository**. J'ai mis à jour la description de l'architecture et la structure des fichiers.
 
 -----
 
 # MyCampus Companion 🎓
 
-`MyCampus Companion` est une application Android native développée dans le cadre du cours de développement mobile du Master 2.  L'objectif est d'offrir aux étudiants un outil centralisant plusieurs services essentiels liés à la vie sur le campus.
+`MyCampus Companion` est une application Android native développée dans le cadre du cours de développement mobile du Master 2. L'objectif est d'offrir aux étudiants un outil centralisant plusieurs services essentiels liés à la vie sur le campus.
 
 ## ✨ Fonctionnalités
 
 L'application implémente les quatre modules principaux décrits dans le cahier des charges :
 
 * **📰 Actualités :** Consultation des actualités du campus via une API REST, avec un cache local SQLite pour un accès hors-ligne.
-* **📞 Annuaire :** Accès à un répertoire de contacts avec la possibilité de lancer un appel ou d'envoyer un SMS directement depuis l'application.
+* **📞 Annuaire :** Accès à un répertoire de contacts (chargé depuis un fichier JSON local) avec la possibilité de lancer un appel ou d'envoyer un SMS.
 * **🗺️ Géolocalisation :** Affichage de la position actuelle de l'utilisateur sur une carte, ainsi qu'un point d'intérêt fixe (la bibliothèque de l'ESATIC).
 * **📸 Signalement Multimédia :** Permet à un utilisateur de signaler un incident en créant un "ticket" contenant un titre, une description, une photo et les coordonnées GPS du lieu.
 
 ## 🏗️ Architecture Technique
 
-Le projet est construit sur une architecture **MVVM (Model-View-ViewModel)**, comme recommandé par Google et le cahier des charges, afin de garantir une séparation claire des responsabilités, une bonne testabilité et une maintenance facilitée.
+Le projet est construit sur une architecture **MVVM + Repository**, comme recommandé par Google et le cahier des charges, afin de garantir une séparation claire des responsabilités, une bonne testabilité et une maintenance facilitée.
 
 Le flux de données suit le schéma suivant :
 
-**Vue (Écran Compose) ➡️ ViewModel ➡️ Repository ➡️ Sources de Données (API / Base de données)**
+**Vue (Écran Compose) ➡️ ViewModel ➡️ Repository ➡️ Sources de Données (API / DB)**
 
-* **Vue (`@Composable`) :** La couche d'interface utilisateur. Elle est "bête" : son seul rôle est d'afficher les données fournies par le ViewModel et de lui remonter les actions de l'utilisateur (clics, etc.).
-* **ViewModel :** Le "cerveau" de la Vue. Il contient la logique de présentation, prépare les données pour l'affichage et réagit aux actions de l'utilisateur. Il ne sait pas *d'où* viennent les données, il les demande simplement au Repository.
-* **Repository (non implémenté, mais partie de l'architecture cible) :** Le "chef d'orchestre" des données. Il centralise l'accès aux données et décide s'il doit les chercher sur le réseau (API) ou dans le cache local (base de données). Nos ViewModels actuels jouent ce rôle de manière simplifiée.
+* **Vue (`@Composable`) :** La couche d'interface utilisateur. Son seul rôle est d'afficher les données fournies par le ViewModel et de lui remonter les actions de l'utilisateur.
+* **ViewModel :** Le "cerveau" de la Vue. Il contient la logique de présentation et prépare les données pour l'affichage. Il ne sait pas *d'où* viennent les données, il les demande simplement au Repository.
+* **Repository :** Le "chef d'orchestre" des données pour une fonctionnalité donnée. Il centralise l'accès aux données et décide s'il doit les chercher sur le réseau (API), dans le cache local (base de données) ou ailleurs. C'est la seule source de vérité pour les ViewModels.
 * **Sources de Données (Model) :**
-  * **Distante :** L'API REST, interrogée avec **Retrofit**.
-  * **Locale :** La base de données SQLite, gérée avec **Room**.
+  * **Distante :** L'API REST, interrogée avec **Retrofit**. 
+  * **Locale :** La base de données SQLite, gérée avec **Room**. 
 
 ## 📁 Structure des Fichiers
 
@@ -47,13 +50,19 @@ com.example.mycampuscompanion
 │   │   ├── Post.kt          // Structure d'une actualité (Entité Room)
 │   │   └── Report.kt        // Structure d'un signalement (Entité Room)
 │   │
-│   └── remote/            // Source de données distante (Réseau)
-│       └── ApiService.kt    // Interface Retrofit pour les appels API
+│   ├── remote/            // Source de données distante (Réseau)
+│   │   └── ApiService.kt    // Interface Retrofit pour les appels API
+│   │
+│   ├── AnnuaireRepository.kt // REPOSITORY pour les contacts
+│   ├── LocationRepository.kt // REPOSITORY pour la géolocalisation
+│   ├── NewsRepository.kt     // REPOSITORY pour les actualités
+│   └── ReportRepository.kt   // REPOSITORY pour les signalements
 │
 └── ui/                    // LAYER: VIEW & VIEWMODEL - Interface & logique UI
     ├── features/          // Un package par fonctionnalité
     │   ├── directory/
-    │   │   └── AnnuaireScreen.kt  // VUE: Écran de l'annuaire
+    │   │   ├── AnnuaireScreen.kt  // VUE: Écran de l'annuaire
+    │   │   └── AnnuaireViewModel.kt // VIEWMODEL: Logique de l'annuaire
     │   ├── map/
     │   │   ├── MapScreen.kt       // VUE: Écran de la carte
     │   │   └── MapViewModel.kt    // VIEWMODEL: Logique de la carte
@@ -71,15 +80,13 @@ com.example.mycampuscompanion
 
 ## 🛠️ Technologies et Bibliothèques
 
-* **Langage :** [Kotlin](https://kotlinlang.org/) (au lieu de Java, un choix motivé par les recommandations actuelles de Google pour le développement Android).
+* **Langage :** [Kotlin](https://kotlinlang.org/) (au lieu de Java, un choix motivé par les recommandations actuelles de Google pour le développement Android). 
 * **Interface Utilisateur :** [Jetpack Compose](https://developer.android.com/jetpack/compose) pour une UI déclarative et moderne.
-* **Architecture :** MVVM (Model-View-ViewModel).
-* **Asynchronisme :** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) pour gérer les opérations en arrière-plan (réseau, base de données).
-* **Réseau :** [Retrofit](https://square.github.io/retrofit/) pour les appels à l'API REST  et [Gson](https://github.com/google/gson) pour la conversion JSON.
-* **Base de Données :** [Room](https://developer.android.com/jetpack/androidx/releases/room) pour la persistance des données SQLite.
+* **Architecture :** **MVVM + Repository**. 
+* **Asynchronisme :** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) pour gérer les opérations en arrière-plan.
+* **Réseau :** [Retrofit](https://square.github.io/retrofit/) pour les appels à l'API REST  et [Gson](https://github.com/google/gson) pour la conversion JSON. 
+* **Base de Données :** [Room](https://developer.android.com/jetpack/androidx/releases/room) pour la persistance des données SQLite. 
 * **Navigation :** [Navigation Compose](https://developer.android.com/jetpack/compose/navigation) pour gérer la navigation entre les écrans.
-* **Cartographie :** [osmdroid](https://github.com/osmdroid/osmdroid) pour l'affichage des cartes OpenStreetMap (choisi comme équivalent au Google Maps SDK ).
+* **Cartographie :** [osmdroid](https://github.com/osmdroid/osmdroid) pour l'affichage des cartes OpenStreetMap (choisi comme équivalent au Google Maps SDK). 
 * **Chargement d'images :** [Coil](https://coil-kt.github.io/coil/) pour charger et afficher les images de manière asynchrone.
 * **Gestion des permissions et activités :** [Activity Result APIs](https://developer.android.com/training/basics/intents/result).
-
------
