@@ -12,7 +12,7 @@ class ReportRepository(
 
     fun getAllReports() = reportDao.getAllReports()
 
-    suspend fun insert(title: String, description: String, imageUri: Uri) {
+    suspend fun insert(title: String, description: String, imageUri: Uri,isVideo: Boolean) {
         // On demande la localisation au spécialiste
         val location = locationRepository.getUserLocation()
 
@@ -23,7 +23,8 @@ class ReportRepository(
                 description = description,
                 imageUri = imageUri.toString(),
                 latitude = location.latitude,
-                longitude = location.longitude
+                longitude = location.longitude,
+                isVideo = isVideo
             )
             reportDao.insert(report)
         } else {

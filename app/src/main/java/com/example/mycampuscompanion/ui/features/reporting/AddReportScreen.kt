@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
+import android.widget.VideoView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
@@ -28,6 +30,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.app.Activity
+import android.content.Intent
+import android.provider.MediaStore
 
 
 
@@ -36,30 +41,42 @@ fun AddReportScreen(
     navController: NavController,
     reportingViewModel: ReportingViewModel
 ) {
+    // --- GESTION DE L'ÉTAT ---
     var title by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
-    var imageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-    var tempImageUri by remember { mutableStateOf<Uri?>(null) }
+    var mediaUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var isVideo by rememberSaveable { mutableStateOf(false) }
+    var tempMediaUri by remember { mutableStateOf<Uri?>(null) }
     var hasAttemptedSubmit by rememberSaveable { mutableStateOf(false) }
-
-    // --- AJOUT : État pour contrôler la visibilité de notre dialogue d'explication ---
     var showCameraPermissionDialog by rememberSaveable { mutableStateOf(false) }
-
     val context = LocalContext.current
 
-    val cameraLauncher = rememberLauncherForActivityResult(
+    // --- LAUNCHERS ---
+    val photoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
-        onResult = { success -> if (success) { imageUri = tempImageUri } }
+        onResult = { success ->
+            if (success) {
+                mediaUri = tempMediaUri
+                isVideo = false
+            }
+        }
+    )
+
+    val videoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                mediaUri = tempMediaUri
+                isVideo = true
+            }
+        }
     )
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (isGranted) {
-                // La permission a été accordée via le dialogue système, on lance la caméra
-                val newUri = createImageUri(context)
-                tempImageUri = newUri
-                cameraLauncher.launch(newUri)
+                Toast.makeText(context, "Permission accordée. Veuillez réessayer.", Toast.LENGTH_SHORT).show()
             }
         }
     )
@@ -69,22 +86,19 @@ fun AddReportScreen(
         onResult = { isGranted ->
             if (isGranted) {
                 Toast.makeText(context, "Permission accordée. Veuillez cliquer à nouveau sur 'Envoyer'.", Toast.LENGTH_LONG).show()
-            } else {
-                Toast.makeText(context, "Permission de localisation refusée.", Toast.LENGTH_SHORT).show()
             }
         }
     )
 
-    // --- AJOUT : Le Composable pour notre boîte de dialogue d'explication ---
+    // --- DIALOGUE DE PERMISSION ---
     if (showCameraPermissionDialog) {
         AlertDialog(
             onDismissRequest = { showCameraPermissionDialog = false },
             title = { Text("Permission pour la caméra requise") },
-            text = { Text("Pour ajouter une photo à votre signalement, l'application a besoin d'accéder à votre caméra.") },
+            text = { Text("Pour joindre un média, l'application a besoin d'accéder à votre caméra.") },
             confirmButton = {
                 Button(onClick = {
                     showCameraPermissionDialog = false
-                    // On lance la demande de permission système
                     cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                 }) { Text("Continuer") }
             },
@@ -94,6 +108,7 @@ fun AddReportScreen(
         )
     }
 
+    // --- INTERFACE UTILISATEUR ---
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -102,14 +117,29 @@ fun AddReportScreen(
         Text(text = "Nouveau Signalement", style = MaterialTheme.typography.headlineSmall)
 
         Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-            if (imageUri != null) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = imageUri),
-                    contentDescription = "Aperçu de l'image",
-                    modifier = Modifier.fillMaxSize()
-                )
+            if (mediaUri != null) {
+                if (isVideo) {
+                    AndroidView(
+                        factory = { ctx ->
+                            VideoView(ctx).apply {
+                                setVideoURI(mediaUri)
+                                setOnPreparedListener { mp ->
+                                    mp.isLooping = true
+                                    start()
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = mediaUri),
+                        contentDescription = "Aperçu de l'image",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             } else {
-                Text("Aucune image capturée", textAlign = TextAlign.Center)
+                Text("Aucun média capturé", textAlign = TextAlign.Center)
             }
         }
 
@@ -131,30 +161,33 @@ fun AddReportScreen(
             supportingText = { if (description.isBlank() && hasAttemptedSubmit) { Text("Ce champ ne peut pas être vide") } }
         )
 
-        Button(onClick = {
-            when (PackageManager.PERMISSION_GRANTED) {
-                ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
-                    imageUri?.let { oldUri -> context.contentResolver.delete(oldUri, null, null) }
-                    val newUri = createImageUri(context)
-                    tempImageUri = newUri
-                    cameraLauncher.launch(newUri)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Button(modifier = Modifier.weight(1f), onClick = {
+                handleMediaCapture(context, "photo", mediaUri, cameraPermissionLauncher) { uri ->
+                    tempMediaUri = uri
+                    photoLauncher.launch(uri)
                 }
-                else -> {
-                    // --- MODIFICATION : On affiche notre dialogue au lieu de lancer directement la permission ---
-                    showCameraPermissionDialog = true
+            }) { Text("Prendre une photo") }
+
+            Button(modifier = Modifier.weight(1f), onClick = {handleMediaCapture(context, "video", mediaUri, cameraPermissionLauncher) { uri ->
+                tempMediaUri = uri
+                // On crée un Intent personnalisé
+                val intent = Intent(MediaStore.ACTION_VIDEO_CAPTURE).apply {
+                    putExtra(MediaStore.EXTRA_OUTPUT, uri) // On dit où sauvegarder
+                    putExtra(MediaStore.EXTRA_DURATION_LIMIT, 30) // Limite de 30 secondes
                 }
+                videoLauncher.launch(intent)
             }
-        }) {
-            Text(if (imageUri == null) "Prendre une photo" else "Prendre une autre photo")
+            }) { Text("Vidéo (30s max)") }
         }
 
         Button(
             onClick = {
                 hasAttemptedSubmit = true
-                if (title.isNotBlank() && description.isNotBlank() && imageUri != null) {
-                    when (PackageManager.PERMISSION_GRANTED) {
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) -> {
-                            reportingViewModel.saveReport(title, description, imageUri!!) {
+                if (title.isNotBlank() && description.isNotBlank() && mediaUri != null) {
+                    when (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                        PackageManager.PERMISSION_GRANTED -> {
+                            reportingViewModel.saveReport(title, description, mediaUri!!, isVideo) {
                                 navController.popBackStack()
                             }
                         }
@@ -164,10 +197,29 @@ fun AddReportScreen(
                     }
                 }
             },
-            enabled = imageUri != null
+            enabled = mediaUri != null
         ) {
             Text("Envoyer le signalement")
         }
+    }
+}
+
+private fun handleMediaCapture(
+    context: Context,
+    type: String,
+    currentMediaUri: Uri?,
+    permissionLauncher: androidx.activity.result.ActivityResultLauncher<String>,
+    onPermissionGranted: (Uri) -> Unit
+) {
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+        currentMediaUri?.let { oldUri ->
+            context.contentResolver.delete(oldUri, null, null)
+        }
+        val newUri = if (type == "video") createVideoUri(context) else createImageUri(context)
+        onPermissionGranted(newUri)
+    } else {
+        // Gérer l'affichage du dialogue d'explication si on voulait l'ajouter ici aussi
+        permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 }
 
@@ -175,9 +227,12 @@ private fun createImageUri(context: Context): Uri {
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
     val imageFile = File(context.cacheDir, "images/photo_$timeStamp.jpg")
     imageFile.parentFile?.mkdirs()
-    return FileProvider.getUriForFile(
-        context,
-        "${context.packageName}.provider",
-        imageFile
-    )
+    return FileProvider.getUriForFile(context, "${context.packageName}.provider", imageFile)
+}
+
+private fun createVideoUri(context: Context): Uri {
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val videoFile = File(context.cacheDir, "videos/video_$timeStamp.mp4")
+    videoFile.parentFile?.mkdirs()
+    return FileProvider.getUriForFile(context, "${context.packageName}.provider", videoFile)
 }

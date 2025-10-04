@@ -1,6 +1,5 @@
 package com.example.mycampuscompanion.ui.features.reporting
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,24 +9,27 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.decode.VideoFrameDecoder
+import coil.request.ImageRequest
+import coil.request.videoFrameMillis
 import com.example.mycampuscompanion.data.model.Report
-
-// La Factory n'est plus dans ce fichier, c'est parfait.
 
 @Composable
 fun ReportingListScreen(
     navController: NavController,
     viewModel: ReportingViewModel
 ) {
-    Log.d("VIEWMODEL_DEBUG", "🧠 ViewModel dans l'écran LISTE: ${viewModel.hashCode()}")
     val reports by viewModel.reports.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -53,7 +55,6 @@ fun ReportingListScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(reports) { report ->
-                    // --- MODIFICATION : On passe une action de clic à la ReportCard ---
                     ReportCard(
                         report = report,
                         onClick = {
@@ -70,17 +71,37 @@ fun ReportingListScreen(
 @Composable
 fun ReportCard(
     report: Report,
-    onClick: () -> Unit // --- AJOUT : La Card accepte maintenant une fonction onClick ---
+    onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    // On crée l'ImageLoader une seule fois et on le garde en mémoire
+    val imageLoader = remember {
+        ImageLoader.Builder(context)
+            .components {
+                add(VideoFrameDecoder.Factory())
+            }
+            .build()
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }, // --- AJOUT : On rend la Card cliquable ---
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
             AsyncImage(
-                model = report.imageUri.toUri(),
+                model = ImageRequest.Builder(context)
+                    .data(report.imageUri.toUri())
+                    .apply {
+                        // On applique la configuration spécifique à la vidéo si nécessaire
+                        if (report.isVideo) {
+                            videoFrameMillis(1000)
+                        }
+                    }
+                    .build(),
+                imageLoader = imageLoader, // On utilise notre ImageLoader personnalisé
                 contentDescription = report.title,
                 modifier = Modifier
                     .fillMaxWidth()

@@ -10,7 +10,7 @@ import com.example.mycampuscompanion.data.model.Report
 // 1. @Database : On déclare que c'est une base de données Room.
 //    entities = [...] : On liste toutes les entités (tables) que cette base de données va gérer.
 //    version = 1 : C'est la version de notre base. Si on change la structure, on devra l'augmenter.
-@Database(entities = [Post::class,Report::class], version = 2)
+@Database(entities = [Post::class,Report::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
 
     // 2. On déclare une fonction abstraite pour chaque DAO.

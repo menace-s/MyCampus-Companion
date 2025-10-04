@@ -30,10 +30,10 @@ class ReportingViewModel(
         )
 
     // La fonction de sauvegarde délègue tout le travail au Repository
-    fun saveReport(title: String, description: String, imageUri: Uri, onSuccess: () -> Unit) {
+    fun saveReport(title: String, description: String, imageUri: Uri, isVideo: Boolean, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
-                reportRepository.insert(title, description, imageUri)
+                reportRepository.insert(title, description, imageUri, isVideo)
                 onSuccess()
             } catch (e: Exception) {
                 // Gérer les erreurs remontées par le Repository (ex: permission refusée)

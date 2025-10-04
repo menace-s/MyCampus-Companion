@@ -12,5 +12,6 @@ data class Report(
     val imageUri: String,
     val latitude: Double,
     val longitude: Double,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val isVideo: Boolean = false
 )
