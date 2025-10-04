@@ -22,17 +22,6 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
-// On crée une Factory pour notre MapViewModel, comme pour le NewsViewModel
-object MapViewModelFactory : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-        val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
-        if (modelClass.isAssignableFrom(MapViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return MapViewModel(application) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
 
 
 @Composable

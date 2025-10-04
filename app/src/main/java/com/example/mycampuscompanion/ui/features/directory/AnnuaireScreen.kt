@@ -24,10 +24,17 @@ import androidx.compose.ui.unit.dp
 import com.example.mycampuscompanion.ui.features.news.NewsScreen
 import com.example.mycampuscompanion.data.model.Contact
 import com.example.mycampuscompanion.ui.theme.MyCampusCompanionTheme
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun AnnuaireScreen(contacts: List<Contact>, modifier: Modifier = Modifier) {
-    LazyColumn(modifier = modifier) {
+fun AnnuaireScreen(
+    viewModel: AnnuaireViewModel = viewModel(factory = AnnuaireViewModelFactory)
+) {
+    val contacts by viewModel.contacts.collectAsStateWithLifecycle()
+
+    LazyColumn(modifier = Modifier) {
         items(contacts) { contact ->
             ContactCard(contact = contact)
         }

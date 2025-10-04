@@ -79,7 +79,7 @@ fun MainScreen() {
         // 2. Mettre en place le NavHost qui affichera les écrans
         NavHost(navController, startDestination = Screen.Actualites.route, Modifier.padding(innerPadding)) {
             composable(Screen.Actualites.route) { NewsScreen() }
-            composable(Screen.Annuaire.route) { AnnuaireScreen(contacts = sampleContacts) }
+            composable(Screen.Annuaire.route) { AnnuaireScreen() }
             composable(Screen.Carte.route) { com.example.mycampuscompanion.ui.features.map.MapScreen() }
             navigation(
                 startDestination = "reporting_list",

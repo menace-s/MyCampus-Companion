@@ -25,21 +25,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mycampuscompanion.data.model.Post
 
-object NewsViewModelFactory : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>,
-        extras: CreationExtras // Ce paramètre "extras" est la nouvelle façon de faire
-    ): T {
-        if (modelClass.isAssignableFrom(NewsViewModel::class.java)) {
-            // On récupère l'application via les "extras" de manière sûre
-            val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
 
-            @Suppress("UNCHECKED_CAST")
-            return NewsViewModel(application) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
 
 @Composable
 fun NewsScreen(newsViewModel: NewsViewModel = viewModel(factory = NewsViewModelFactory)) {

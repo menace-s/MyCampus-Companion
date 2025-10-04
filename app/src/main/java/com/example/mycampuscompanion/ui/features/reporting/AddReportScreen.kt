@@ -29,16 +29,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-object ReportingViewModelFactory : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-        val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
-        if (modelClass.isAssignableFrom(ReportingViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return ReportingViewModel(application) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
+
 
 @Composable
 fun AddReportScreen(

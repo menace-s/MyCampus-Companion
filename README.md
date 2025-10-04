@@ -3,16 +3,16 @@
 
 # MyCampus Companion 🎓
 
-`MyCampus Companion` est une application Android native développée dans le cadre du cours de développement mobile du Master 2.  L'objectif est d'offrir aux étudiants un outil centralisant plusieurs services essentiels liés à la vie sur le campus. 
+`MyCampus Companion` est une application Android native développée dans le cadre du cours de développement mobile du Master 2.  L'objectif est d'offrir aux étudiants un outil centralisant plusieurs services essentiels liés à la vie sur le campus.
 
 ## ✨ Fonctionnalités
 
 L'application implémente les quatre modules principaux décrits dans le cahier des charges :
 
-* **📰 Actualités :** Consultation des actualités du campus via une API REST, avec un cache local SQLite pour un accès hors-ligne. 
-* **📞 Annuaire :** Accès à un répertoire de contacts avec la possibilité de lancer un appel ou d'envoyer un SMS directement depuis l'application. 
-* **🗺️ Géolocalisation :** Affichage de la position actuelle de l'utilisateur sur une carte, ainsi qu'un point d'intérêt fixe (la bibliothèque de l'ESATIC). 
-* **📸 Signalement Multimédia :** Permet à un utilisateur de signaler un incident en créant un "ticket" contenant un titre, une description, une photo et les coordonnées GPS du lieu. 
+* **📰 Actualités :** Consultation des actualités du campus via une API REST, avec un cache local SQLite pour un accès hors-ligne.
+* **📞 Annuaire :** Accès à un répertoire de contacts avec la possibilité de lancer un appel ou d'envoyer un SMS directement depuis l'application.
+* **🗺️ Géolocalisation :** Affichage de la position actuelle de l'utilisateur sur une carte, ainsi qu'un point d'intérêt fixe (la bibliothèque de l'ESATIC).
+* **📸 Signalement Multimédia :** Permet à un utilisateur de signaler un incident en créant un "ticket" contenant un titre, une description, une photo et les coordonnées GPS du lieu.
 
 ## 🏗️ Architecture Technique
 
@@ -26,8 +26,8 @@ Le flux de données suit le schéma suivant :
 * **ViewModel :** Le "cerveau" de la Vue. Il contient la logique de présentation, prépare les données pour l'affichage et réagit aux actions de l'utilisateur. Il ne sait pas *d'où* viennent les données, il les demande simplement au Repository.
 * **Repository (non implémenté, mais partie de l'architecture cible) :** Le "chef d'orchestre" des données. Il centralise l'accès aux données et décide s'il doit les chercher sur le réseau (API) ou dans le cache local (base de données). Nos ViewModels actuels jouent ce rôle de manière simplifiée.
 * **Sources de Données (Model) :**
-    * **Distante :** L'API REST, interrogée avec **Retrofit**.
-    * **Locale :** La base de données SQLite, gérée avec **Room**.
+  * **Distante :** L'API REST, interrogée avec **Retrofit**.
+  * **Locale :** La base de données SQLite, gérée avec **Room**.
 
 ## 📁 Structure des Fichiers
 
@@ -73,10 +73,10 @@ com.example.mycampuscompanion
 
 * **Langage :** [Kotlin](https://kotlinlang.org/) (au lieu de Java, un choix motivé par les recommandations actuelles de Google pour le développement Android).
 * **Interface Utilisateur :** [Jetpack Compose](https://developer.android.com/jetpack/compose) pour une UI déclarative et moderne.
-* **Architecture :** MVVM (Model-View-ViewModel). 
+* **Architecture :** MVVM (Model-View-ViewModel).
 * **Asynchronisme :** [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) pour gérer les opérations en arrière-plan (réseau, base de données).
-* **Réseau :** [Retrofit](https://square.github.io/retrofit/) pour les appels à l'API REST  et [Gson](https://github.com/google/gson) pour la conversion JSON. 
-* **Base de Données :** [Room](https://developer.android.com/jetpack/androidx/releases/room) pour la persistance des données SQLite. 
+* **Réseau :** [Retrofit](https://square.github.io/retrofit/) pour les appels à l'API REST  et [Gson](https://github.com/google/gson) pour la conversion JSON.
+* **Base de Données :** [Room](https://developer.android.com/jetpack/androidx/releases/room) pour la persistance des données SQLite.
 * **Navigation :** [Navigation Compose](https://developer.android.com/jetpack/compose/navigation) pour gérer la navigation entre les écrans.
 * **Cartographie :** [osmdroid](https://github.com/osmdroid/osmdroid) pour l'affichage des cartes OpenStreetMap (choisi comme équivalent au Google Maps SDK ).
 * **Chargement d'images :** [Coil](https://coil-kt.github.io/coil/) pour charger et afficher les images de manière asynchrone.

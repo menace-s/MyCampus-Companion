@@ -1,43 +1,46 @@
 package com.example.mycampuscompanion.ui.features.map
 
-import android.Manifest
 import android.app.Application
-import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.AndroidViewModel
-import com.google.android.gms.location.LocationServices
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.mycampuscompanion.data.LocationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import org.osmdroid.util.GeoPoint
 
 data class MapState(
     val userLocation: GeoPoint? = null
 )
 
-class MapViewModel(application: Application) : AndroidViewModel(application) {
+class MapViewModel(private val locationRepository: LocationRepository) : ViewModel() {
 
     private val _state = MutableStateFlow(MapState())
     val state = _state.asStateFlow()
 
-    // Le client pour accéder aux services de localisation
-    private val locationClient = LocationServices.getFusedLocationProviderClient(application)
-
     fun getUserLocation() {
-        // Vérifier si la permission a bien été accordée
-        val hasPermission = ContextCompat.checkSelfPermission(
-            getApplication(),
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (hasPermission) {
-            // Si oui, on demande la dernière position connue
-            locationClient.lastLocation.addOnSuccessListener { location ->
-                location?.let {
-                    _state.value = _state.value.copy(
-                        userLocation = GeoPoint(it.latitude, it.longitude)
-                    )
-                }
+        viewModelScope.launch {
+            val location = locationRepository.getUserLocation()
+            location?.let {
+                _state.value = _state.value.copy(
+                    userLocation = GeoPoint(it.latitude, it.longitude)
+                )
             }
         }
+    }
+}
+
+object MapViewModelFactory : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+        val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
+        if (modelClass.isAssignableFrom(MapViewModel::class.java)) {
+            // La Factory construit le Repository et l'injecte dans le ViewModel
+            val locationRepository = LocationRepository(application)
+            @Suppress("UNCHECKED_CAST")
+            return MapViewModel(locationRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

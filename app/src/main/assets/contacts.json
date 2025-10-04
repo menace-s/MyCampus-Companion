@@ -1,0 +1,28 @@
+[
+  {
+    "id": 1,
+    "nom": "Bibliothèque",
+    "prenom": "Service",
+    "numeroDeTelephone": "0102030405",
+    "email": "biblio@esatic.ci"
+  },
+  {
+    "id": 2,
+    "nom": "Scolarité",
+    "prenom": "Service",
+    "numeroDeTelephone": "0203040506"
+  },
+  {
+    "id": 3,
+    "nom": "KOUASSI",
+    "prenom": "Jean-Luc",
+    "numeroDeTelephone": "0304050607",
+    "email": "jl.kouassi@prof.esatic.ci"
+  },
+  {
+    "id": 4,
+    "nom": "BROU",
+    "prenom": "Anne-Marie",
+    "numeroDeTelephone": "0405060708"
+  }
+]
