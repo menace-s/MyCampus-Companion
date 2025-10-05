@@ -9,31 +9,44 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
-import com.example.mycampuscompanion.data.model.Contact
+import com.example.mycampuscompanion.data.local.AppDatabase
+import com.example.mycampuscompanion.data.remote.RetrofitClient
+import com.example.mycampuscompanion.data.repository.NewsRepository
 import com.example.mycampuscompanion.ui.features.directory.AnnuaireScreen
 import com.example.mycampuscompanion.ui.features.news.NewsScreen
-import com.example.mycampuscompanion.ui.theme.MyCampusCompanionTheme
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.navigation
+import com.example.mycampuscompanion.ui.features.news.NewsViewModel
 import com.example.mycampuscompanion.ui.features.reporting.ReportingViewModel
 import com.example.mycampuscompanion.ui.features.reporting.ReportingViewModelFactory
+import com.example.mycampuscompanion.ui.theme.MyCampusCompanionTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Configuration du Repository pour les actualités NYTimes
+        val database = AppDatabase.getInstance(applicationContext)
+        val newsRepository = NewsRepository(
+            apiService = RetrofitClient.apiService,
+            postDao = database.postDao(),
+            apiKey = "8kK1GqsOz27BVkXClvc953BY2pB8ctf8" // ⚠️ Remplacez par votre clé NYTimes API
+        )
+
         setContent {
             MyCampusCompanionTheme {
-                MainScreen()
+                MainScreen(newsRepository = newsRepository)
             }
         }
     }
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(newsRepository: NewsRepository) {
     // 1. Initialiser le contrôleur de navigation
     val navController = rememberNavController()
 
@@ -78,15 +91,26 @@ fun MainScreen() {
     ) { innerPadding ->
         // 2. Mettre en place le NavHost qui affichera les écrans
         NavHost(navController, startDestination = Screen.Actualites.route, Modifier.padding(innerPadding)) {
-            composable(Screen.Actualites.route) { NewsScreen() }
+
+            // ÉCRAN ACTUALITÉS avec ViewModel et Repository
+            composable(Screen.Actualites.route) {
+                val newsViewModel: NewsViewModel = viewModel(
+                    factory = NewsViewModelFactory(newsRepository)
+                )
+                NewsScreen(viewModel = newsViewModel)
+            }
+
             composable(Screen.Annuaire.route) { AnnuaireScreen() }
-            composable(Screen.Carte.route) { com.example.mycampuscompanion.ui.features.map.MapScreen() }
+
+            composable(Screen.Carte.route) {
+                com.example.mycampuscompanion.ui.features.map.MapScreen()
+            }
+
+            // GRAPHE DE NAVIGATION POUR LE SIGNALEMENT
             navigation(
                 startDestination = "reporting_list",
                 route = Screen.Signalement.route
             ) {
-                // On ne crée PAS le ViewModel ici.
-
                 composable("reporting_list") { backStackEntry ->
                     // 1. On trouve le "propriétaire" du ViewModel : le graphe de navigation "Signalement"
                     val parentEntry = remember(backStackEntry) {
@@ -125,10 +149,15 @@ fun MainScreen() {
     }
 }
 
-
-// Liste de données pour la démo (on la laisse ici temporairement)
-val sampleContacts = listOf(
-    Contact(1, "Aganh", "Jean", "05 44 83 35 50", "jean.dupont@campus.com"),
-    Contact(2, "Durand", "Marie", "02 34 56 78 90"),
-    Contact(3, "Martin", "Pierre", "03 45 67 89 01", "pierre.martin@campus.com"),
-)
+// Factory pour créer le NewsViewModel avec injection du Repository
+class NewsViewModelFactory(
+    private val repository: NewsRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(NewsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return NewsViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}

@@ -1,66 +1,93 @@
+// ui/features/news/NewsViewModel.kt
 package com.example.mycampuscompanion.ui.features.news
 
-import android.app.Application
-import androidx.lifecycle.*
-import androidx.lifecycle.viewmodel.CreationExtras
-import com.example.mycampuscompanion.data.NewsRepository
-import com.example.mycampuscompanion.data.local.AppDatabase
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.mycampuscompanion.data.model.Post
-import com.example.mycampuscompanion.data.remote.RetrofitClient
+import com.example.mycampuscompanion.data.repository.NewsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-sealed interface NewsState {
-    object Loading : NewsState
-    data class Success(val posts: List<Post>) : NewsState
-    data class Error(val message: String) : NewsState
-}
+/**
+ * ViewModel pour l'écran des actualités
+ * Gère la logique de présentation et l'état de l'UI
+ */
+class NewsViewModel(
+    private val repository: NewsRepository
+) : ViewModel() {
 
-// --- Le ViewModel ne dépend plus que du Repository ---
-class NewsViewModel(private val newsRepository: NewsRepository) : ViewModel() {
+    // État de l'UI (privé et mutable)
+    private val _uiState = MutableStateFlow<NewsUiState>(NewsUiState.Loading)
 
-    private val _state = MutableStateFlow<NewsState>(NewsState.Loading)
-    val state: StateFlow<NewsState> = _state
+    // État exposé à la Vue (public et immuable)
+    val uiState: StateFlow<NewsUiState> = _uiState.asStateFlow()
 
     init {
-        // On observe le flux de données venant du Repository
-        viewModelScope.launch {
-            newsRepository.getPosts()
-                .catch { e ->
-                    _state.value = NewsState.Error("Erreur de base de données: ${e.message}")
-                }
-                .collect { posts ->
-                    _state.value = NewsState.Success(posts)
-                }
-        }
-
-        // On demande au Repository de rafraîchir les données
-        refreshPosts()
+        // Charger les actualités au démarrage
+        loadNews()
     }
 
-    fun refreshPosts() {
+    /**
+     * Charge les actualités depuis le repository
+     */
+    fun loadNews() {
         viewModelScope.launch {
-            newsRepository.refreshPosts()
+            _uiState.value = NewsUiState.Loading
+
+            repository.getNews().collect { result ->
+                _uiState.value = result.fold(
+                    onSuccess = { posts ->
+                        NewsUiState.Success(posts)
+                    },
+                    onFailure = { error ->
+                        NewsUiState.Error(error.message ?: "Erreur inconnue")
+                    }
+                )
+            }
+        }
+    }
+
+    /**
+     * Rafraîchit les actualités (appelé par le bouton refresh)
+     */
+    fun refresh() {
+        loadNews()
+    }
+
+    /**
+     * Charge les actualités d'une section spécifique
+     * @param section Section NYTimes (world, technology, science, etc.)
+     */
+    fun loadNewsBySection(section: String) {
+        viewModelScope.launch {
+            _uiState.value = NewsUiState.Loading
+
+            repository.getNewsBySection(section).collect { result ->
+                _uiState.value = result.fold(
+                    onSuccess = { posts ->
+                        NewsUiState.Success(posts)
+                    },
+                    onFailure = { error ->
+                        NewsUiState.Error(error.message ?: "Erreur inconnue")
+                    }
+                )
+            }
         }
     }
 }
 
-// --- La Factory se charge de construire le Repository et de l'injecter ---
-object NewsViewModelFactory : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-        val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
-        if (modelClass.isAssignableFrom(NewsViewModel::class.java)) {
-            // 1. On crée toutes les dépendances ici
-            val postDao = AppDatabase.getInstance(application).postDao()
-            val apiService = RetrofitClient.apiService
-            val repository = NewsRepository(apiService, postDao)
+/**
+ * États possibles de l'écran des actualités
+ */
+sealed class NewsUiState {
+    // Chargement en cours
+    object Loading : NewsUiState()
 
-            @Suppress("UNCHECKED_CAST")
-            // 2. On injecte le Repository dans le ViewModel
-            return NewsViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
+    // Données chargées avec succès
+    data class Success(val posts: List<Post>) : NewsUiState()
+
+    // Erreur lors du chargement
+    data class Error(val message: String) : NewsUiState()
 }

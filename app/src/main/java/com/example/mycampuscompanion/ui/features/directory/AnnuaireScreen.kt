@@ -98,11 +98,3 @@ fun ContactCard(contact: Contact) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun AnnuaireScreenPreview() {
-    MyCampusCompanionTheme {
-//        AnnuaireScreen(contacts = sampleContacts)
-        NewsScreen()
-    }
-}
