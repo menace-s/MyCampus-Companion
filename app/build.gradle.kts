@@ -88,7 +88,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     // Ajoute le support pour les miniatures vidéo dans Coil
     implementation("io.coil-kt:coil-video:2.6.0")
-
+    implementation("com.google.accompanist:accompanist-navigation-animation:0.32.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

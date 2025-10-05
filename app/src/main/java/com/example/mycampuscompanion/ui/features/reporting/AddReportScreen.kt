@@ -10,11 +10,19 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -34,8 +42,7 @@ import android.app.Activity
 import android.content.Intent
 import android.provider.MediaStore
 
-
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddReportScreen(
     navController: NavController,
@@ -97,109 +104,224 @@ fun AddReportScreen(
             title = { Text("Permission pour la caméra requise") },
             text = { Text("Pour joindre un média, l'application a besoin d'accéder à votre caméra.") },
             confirmButton = {
-                Button(onClick = {
+                TextButton(onClick = {
                     showCameraPermissionDialog = false
                     cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                 }) { Text("Continuer") }
             },
             dismissButton = {
-                Button(onClick = { showCameraPermissionDialog = false }) { Text("Annuler") }
+                TextButton(onClick = { showCameraPermissionDialog = false }) { Text("Annuler") }
             }
         )
     }
 
     // --- INTERFACE UTILISATEUR ---
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(text = "Nouveau Signalement", style = MaterialTheme.typography.headlineSmall)
-
-        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-            if (mediaUri != null) {
-                if (isVideo) {
-                    AndroidView(
-                        factory = { ctx ->
-                            VideoView(ctx).apply {
-                                setVideoURI(mediaUri)
-                                setOnPreparedListener { mp ->
-                                    mp.isLooping = true
-                                    start()
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxSize()
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Nouveau Signalement",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
-                } else {
-                    Image(
-                        painter = rememberAsyncImagePainter(model = mediaUri),
-                        contentDescription = "Aperçu de l'image",
-                        modifier = Modifier.fillMaxSize()
-                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Retour"
+                        )
+                    }
                 }
-            } else {
-                Text("Aucun média capturé", textAlign = TextAlign.Center)
-            }
+            )
         }
-
-        OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Titre") },
-            modifier = Modifier.fillMaxWidth(),
-            isError = title.isBlank() && hasAttemptedSubmit,
-            supportingText = { if (title.isBlank() && hasAttemptedSubmit) { Text("Ce champ ne peut pas être vide") } }
-        )
-
-        OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
-            label = { Text("Description") },
-            modifier = Modifier.fillMaxWidth(),
-            isError = description.isBlank() && hasAttemptedSubmit,
-            supportingText = { if (description.isBlank() && hasAttemptedSubmit) { Text("Ce champ ne peut pas être vide") } }
-        )
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Button(modifier = Modifier.weight(1f), onClick = {
-                handleMediaCapture(context, "photo", mediaUri, cameraPermissionLauncher) { uri ->
-                    tempMediaUri = uri
-                    photoLauncher.launch(uri)
-                }
-            }) { Text("Prendre une photo") }
-
-            Button(modifier = Modifier.weight(1f), onClick = {handleMediaCapture(context, "video", mediaUri, cameraPermissionLauncher) { uri ->
-                tempMediaUri = uri
-                // On crée un Intent personnalisé
-                val intent = Intent(MediaStore.ACTION_VIDEO_CAPTURE).apply {
-                    putExtra(MediaStore.EXTRA_OUTPUT, uri) // On dit où sauvegarder
-                    putExtra(MediaStore.EXTRA_DURATION_LIMIT, 30) // Limite de 30 secondes
-                }
-                videoLauncher.launch(intent)
-            }
-            }) { Text("Vidéo (30s max)") }
-        }
-
-        Button(
-            onClick = {
-                hasAttemptedSubmit = true
-                if (title.isNotBlank() && description.isNotBlank() && mediaUri != null) {
-                    when (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                        PackageManager.PERMISSION_GRANTED -> {
-                            reportingViewModel.saveReport(title, description, mediaUri!!, isVideo) {
-                                navController.popBackStack()
-                            }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            // Aperçu du média
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp),
+                shape = MaterialTheme.shapes.medium,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (mediaUri != null) {
+                        if (isVideo) {
+                            AndroidView(
+                                factory = { ctx ->
+                                    VideoView(ctx).apply {
+                                        setVideoURI(mediaUri)
+                                        setOnPreparedListener { mp ->
+                                            mp.isLooping = true
+                                            start()
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Image(
+                                painter = rememberAsyncImagePainter(model = mediaUri),
+                                contentDescription = "Aperçu de l'image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
                         }
-                        else -> {
-                            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    } else {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Aucun média sélectionné",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
                 }
-            },
-            enabled = mediaUri != null
-        ) {
-            Text("Envoyer le signalement")
+            }
+
+            // Champs de formulaire
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Titre du signalement") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = title.isBlank() && hasAttemptedSubmit,
+                    supportingText = {
+                        if (title.isBlank() && hasAttemptedSubmit) {
+                            Text(
+                                "Ce champ est obligatoire",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    isError = description.isBlank() && hasAttemptedSubmit,
+                    supportingText = {
+                        if (description.isBlank() && hasAttemptedSubmit) {
+                            Text(
+                                "Ce champ est obligatoire",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                )
+            }
+
+            // Boutons de capture média
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        handleMediaCapture(context, "photo", mediaUri, cameraPermissionLauncher) { uri ->
+                            tempMediaUri = uri
+                            photoLauncher.launch(uri)
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CameraAlt,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Photo")
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        handleMediaCapture(context, "video", mediaUri, cameraPermissionLauncher) { uri ->
+                            tempMediaUri = uri
+                            val intent = Intent(MediaStore.ACTION_VIDEO_CAPTURE).apply {
+                                putExtra(MediaStore.EXTRA_OUTPUT, uri)
+                                putExtra(MediaStore.EXTRA_DURATION_LIMIT, 30)
+                            }
+                            videoLauncher.launch(intent)
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Videocam,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Vidéo (30s)")
+                }
+            }
+
+            // Bouton d'envoi
+            Button(
+                onClick = {
+                    hasAttemptedSubmit = true
+                    if (title.isNotBlank() && description.isNotBlank() && mediaUri != null) {
+                        when (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                            PackageManager.PERMISSION_GRANTED -> {
+                                reportingViewModel.saveReport(title, description, mediaUri!!, isVideo) {
+                                    navController.popBackStack()
+                                }
+                            }
+                            else -> {
+                                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = mediaUri != null,
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Text(
+                    text = "Envoyer le signalement",
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
         }
     }
 }
@@ -218,7 +340,6 @@ private fun handleMediaCapture(
         val newUri = if (type == "video") createVideoUri(context) else createImageUri(context)
         onPermissionGranted(newUri)
     } else {
-        // Gérer l'affichage du dialogue d'explication si on voulait l'ajouter ici aussi
         permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 }
